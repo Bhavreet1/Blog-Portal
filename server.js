@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const connectDB = require("./src/db/mongo");
 const dotenv = require("dotenv");
+const postRoutes = require("./src/routes/post.route");
 dotenv.config();
 const app = express();
 //logger
@@ -16,13 +17,16 @@ app.set("view engine", "ejs");
 // connect to db
 connectDB();
 
-app.post("/", (req, res) => {
+app.post("/api", (req, res) => {
     res.status(200).send({ message: "api is working" });
 })
 
-app.get("/", (req, res) => {
-    res.render("index")
+app.get("/api", (req, res) => {
+    res.render("index" , {message: "Welcome to Blog Portal"})
 })
+
+//routes
+app.use("/api/post", postRoutes);
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
