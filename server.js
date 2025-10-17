@@ -3,6 +3,7 @@ const morgan = require("morgan");
 const connectDB = require("./src/db/mongo");
 const dotenv = require("dotenv");
 const postRoutes = require("./src/routes/post.route");
+const authRoutes = require("./src/routes/auth.route");
 dotenv.config();
 const app = express();
 //logger
@@ -27,6 +28,7 @@ app.get("/api", (req, res) => {
 
 //routes
 app.use("/api/post", postRoutes);
+app.use("/api/auth", authRoutes);
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
