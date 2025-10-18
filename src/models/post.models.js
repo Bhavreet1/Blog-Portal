@@ -17,7 +17,8 @@ const postSchema = new Schema({
     // https://yourwebsite.com/posts/learn-mern-stack-in-2025  slug means short url
   slug: { type: String, unique: true },
   author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  sections: [sectionSchema],  
+  sections: [sectionSchema], 
+  likers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   tags: [String],
   coverImage: { type: String },
   createdAt: { type: Date, default: Date.now },
