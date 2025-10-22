@@ -3,7 +3,11 @@ const User = require("../models/user.model");
 // Create a new post
 const createPost = async (req, res) => {
     try {
-        const newPost = new Post(req.body);
+        // Ensure author is taken from authenticated user if available
+        const postData = { ...req.body };
+        if (req.user && req.user._id) postData.author = req.user._id;
+
+        const newPost = new Post(postData);
         const savedPost = await newPost.save();
         return res.status(201).json(savedPost);
     } catch (error) {
@@ -14,14 +18,40 @@ const createPost = async (req, res) => {
         return res.status(400).json({ message: error.message });
     }
 };
+// read posts
+const getPosts = async (req, res) => {
+    try {
+        const posts = await Post.find().populate("author");
+        return res.status(200).json(posts);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+// Get a single post by id
+const getPost = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ message: "Post ID is required." });
+
+        const post = await Post.findById(id).populate("author", "username fullname");
+        if (!post) return res.status(404).json({ message: "Post not found." });
+
+        return res.status(200).json(post);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
 // Update an existing post
 const updatePost = async (req, res) => {
     try {
-        const { id } = req.body;
+        const { id } = req.params;
         if (!id) {
             return res.status(400).json({ message: "Post ID is required for update." });
         }
         const updatedPost = await Post.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updatedPost) return res.status(404).json({ message: "Post not found." });
         return res.status(200).json(updatedPost);
     } catch (err) {
         return res.status(400).json({ message: err.message });
@@ -30,93 +60,61 @@ const updatePost = async (req, res) => {
 // Delete a post
 const deletePost = async (req, res) => {
     try {
-        const { id } = req.body;
-        await Post.findByIdAndDelete(id);
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ message: "Post ID is required for deletion." });
+
+        const deleted = await Post.findByIdAndDelete(id);
+        if (!deleted) return res.status(404).json({ message: "Post not found." });
+
         return res.status(200).json({ message: "Post deleted successfully" });
     } catch (err) {
         return res.status(400).json({ message: err.message });
     }
 }
 
-// like a post
+// Toggle like status
 const likePost = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const userId = req.user._id; // Get from auth middleware instead of body
-
-        // Use findOneAndUpdate for atomic operation
-        const post = await Post.findOneAndUpdate(
-            { _id: id },
-            {
-                $addToSet: { likers: userId }, // Add userId if not exists
-            },
-            { new: true } // Return updated document
-        );
-
-        if (!post) {
-            return res.status(404).json({ message: "Post not found" });
-        }
-
-        // Update user's liked posts atomically
-        await User.findByIdAndUpdate(
-            userId,
-            {
-                $addToSet: { liked_posts: id }
-            }
-        );
-
-        return res.status(200).json({
-            success: true,
-            likes: post.likers.length,
-            isLiked: true
-        });
-
-    } catch (error) {
-        return res.status(500).json({ 
-            message: "An error occurred while liking the post.",
-            error: error.message 
-        });
-    }
-};
-
-const unlikePost = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user._id;
 
-        // Use findOneAndUpdate for atomic operation
-        const post = await Post.findOneAndUpdate(
-            { _id: id },
-            {
-                $pull: { likers: userId } // Remove userId from likers
-            },
-            { new: true }
-        );
-
+        // First, check if user has already liked the post
+        const post = await Post.findById(id);
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
 
-        // Remove post from user's liked posts
+        const isLiked = post.likers.includes(userId);
+
+        // Use atomic operation to toggle like status
+        const updatedPost = await Post.findOneAndUpdate(
+            { _id: id },
+            isLiked
+                ? { $pull: { likers: userId } }    // Unlike if already liked
+                : { $addToSet: { likers: userId } },// Like if not already liked
+            { new: true }
+        );
+
+        // Update user's liked_posts array
         await User.findByIdAndUpdate(
             userId,
-            {
-                $pull: { liked_posts: id }
-            }
+            isLiked
+                ? { $pull: { liked_posts: id } }
+                : { $addToSet: { liked_posts: id } }
         );
 
         return res.status(200).json({
             success: true,
-            likes: post.likers.length,
-            isLiked: false
+            likes: updatedPost.likers.length,
+            isLiked: !isLiked
         });
 
     } catch (error) {
-        return res.status(500).json({ 
-            message: "An error occurred while unliking the post.",
-            error: error.message 
+        return res.status(500).json({
+            message: "An error occurred while toggling like status.",
+            error: error.message
         });
     }
 };
 
-module.exports = { createPost, updatePost, deletePost, likePost, unlikePost };
+module.exports = { createPost, getPosts, getPost, updatePost, likePost , deletePost};

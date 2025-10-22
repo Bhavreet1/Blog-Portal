@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth.middleware');
-const { createPost, updatePost, likePost, unlikePost , deletePost } = require('../controllers/post.controller');
+const { createPost, getPosts, getPost, updatePost, likePost, deletePost } = require('../controllers/post.controller');
 
-// Route to create a new post
-router.post("/", auth, createPost);
-router.put("/", auth, updatePost);
-router.delete("/", auth, deletePost);
+// RESTful routes
+router.post("/", auth, createPost);        // CREATE new post
+router.get("/", auth, getPosts);           // GET all posts
+router.get("/:id", auth, getPost);         // GET single post
+router.put("/:id", auth, updatePost);      // UPDATE post
+router.delete("/:id", auth, deletePost);   // DELETE post
 
-// like endpoint
-router.post("/:id/like", auth, likePost);
-router.post("/:id/unlike", auth, unlikePost);
+// Special route for liking
+router.post("/:id/like", auth, likePost);  // Changed to POST as it modifies state
 
 module.exports = router;

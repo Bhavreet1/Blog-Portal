@@ -34,11 +34,9 @@ app.get("/api", (req, res) => {
 })
 
 //routes
-app.use("/api/post", postRoutes);
+app.use("/api/posts", postRoutes);
 app.use("/api/auth", authRoutes);
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
 });
-
-module.exports = app;

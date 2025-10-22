@@ -3,21 +3,21 @@ const { Schema } = mongoose;
 const slugify = require("slugify");
 
 const sectionSchema = new Schema({
-    alignment: {
-        type: String,
-        enum: ["left", "center", "right"],
-        default: "left"
-    },
-    subheading: { type: String },
-    content: { type: String, required: true },
+  alignment: {
+    type: String,
+    enum: ["left", "center", "right"],
+    default: "left"
+  },
+  subheading: { type: String },
+  content: { type: String, required: true },
 });
 
 const postSchema = new Schema({
-    title: { type: String, required: true },
-    // https://yourwebsite.com/posts/learn-mern-stack-in-2025  slug means short url
+  title: { type: String, required: true },
+  // https://yourwebsite.com/posts/learn-mern-stack-in-2025  slug means short url
   slug: { type: String, unique: true },
   author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  sections: [sectionSchema], 
+  sections: [sectionSchema],
   likers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   tags: [String],
   coverImage: { type: String },
@@ -27,7 +27,7 @@ const postSchema = new Schema({
 });
 
 // Middleware to generate slug before saving a post
-postSchema.pre("save", function(next) {
+postSchema.pre("save", function (next) {
   if (this.isModified("title")) {
     this.slug = slugify(this.title, { lower: true, strict: true });
   }
