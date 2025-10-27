@@ -4,7 +4,8 @@ const connectDB = require("./src/db/mongo");
 const dotenv = require("dotenv");
 const postRoutes = require("./src/routes/post.route");
 const authRoutes = require("./src/routes/auth.route");
-const cookieParser= require("cookie-parser");
+const cookieParser = require("cookie-parser");
+const path = require("path");
 dotenv.config();
 const app = express();
 
@@ -19,8 +20,8 @@ app.use(express.urlencoded({ extended: true }));
 //ejs
 app.set("views", "./src/views");
 app.set("view engine", "ejs");
-
-
+// serve static files from /public (so /app.js is accessible as /app.js)
+app.use(express.static(path.join(__dirname, "public")));
 
 // connect to db
 connectDB();
@@ -29,8 +30,8 @@ app.post("/api", (req, res) => {
     res.status(200).send({ message: "api is working" });
 })
 
-app.get("/api", (req, res) => {
-    res.render("index" , {message: "Welcome to Blog Portal"})
+app.get("/", (req, res) => {
+    res.render("home" , {message: "Welcome to Blog Portal"})
 })
 
 //routes
