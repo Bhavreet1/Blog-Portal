@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Blog app</title>
+</head>
+<body>
+    <h2 class="text-5xl">Welcome to blog site. </h2>
+    <h3>Content <%= message %></h3>
+    <%- include('test', { text: message }) %>
+</body>
+</html>
